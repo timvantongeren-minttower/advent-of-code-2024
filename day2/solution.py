@@ -1,3 +1,6 @@
+import io
+
+
 def get_reports(lines: list[str]) -> list[list[int]]:
     reports = []
     for line in lines:
@@ -53,17 +56,17 @@ assert dampended_report_is_safe([8, 6, 4, 4, 1])
 assert dampended_report_is_safe([1, 3, 6, 7, 8])
 
 
-def main():
-    test = False
-    file = "test_input.txt" if test else "real_input.txt"
-
-    with open(file, "r") as f:
-        lines = f.readlines()
+def get_answer_to_part_1(input_stream: io.StringIO) -> int:
+    lines = input_stream.readlines()
 
     reports = get_reports(lines)
 
-    print(sum([dampended_report_is_safe(r) for r in reports]))
+    return sum([report_is_safe(r) for r in reports])
 
 
-if __name__ == "__main__":
-    main()
+def get_answer_to_part_2(input_stream: io.StringIO) -> int:
+    lines = input_stream.readlines()
+
+    reports = get_reports(lines)
+
+    return sum([dampended_report_is_safe(r) for r in reports])
