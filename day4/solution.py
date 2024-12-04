@@ -30,4 +30,22 @@ def get_answer_to_part_1(input_stream: io.StringIO) -> int:
 
 
 def get_answer_to_part_2(input_stream: io.StringIO) -> int:
-    pass
+    lines = [l.replace("\n", "") for l in input_stream.readlines()]
+
+    N, K = len(lines), len(lines[0])
+    n_xmas = 0
+    for i in range(N):
+        for j in range(K):
+            this_char = lines[i][j]
+            if not this_char == "A":
+                continue
+            if i + 1 >= N or i - 1 < 0 or j + 1 >= K or j - 1 < 0:
+                continue
+            diag1 = (lines[i + 1][j + 1], lines[i - 1][j - 1])
+            diag2 = (lines[i + 1][j - 1], lines[i - 1][j + 1])
+            if not ("M" in diag1 and "S" in diag1):
+                continue
+            if not ("M" in diag2 and "S" in diag2):
+                continue
+            n_xmas += 1
+    return n_xmas
