@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from enum import Enum
 import io
-from turtle import position
+
+from tqdm import tqdm
 
 directions_in_order = [
     (-1, 0),  # up
@@ -67,4 +67,43 @@ def get_answer_to_part_1(input_stream: io.StringIO) -> int:
 
 
 def get_answer_to_part_2(input_stream: io.StringIO) -> int:
-    pass
+    lines = input_stream.readlines()
+
+    initial_guard_position = None
+    obstacles: set[tuple[int, int]] = set()
+    for i, line in enumerate(lines):
+        for j, char in enumerate(line):
+            if char == "^":
+                initial_guard_position = (i, j)
+            elif char == "#":
+                obstacles.add((i, j))
+
+    if not initial_guard_position:
+        raise ValueError("Did not find initial guard position")
+    guard = Guard(initial_guard_position)
+
+    original_positions_covered: set[tuple[int, int]] = set()
+    while guard_is_within_bounds(guard, len(lines), len(line)):
+        original_positions_covered.add(guard.position)
+        while guard.next_position() in obstacles:
+            guard.turn()
+        guard.move()
+
+    good_blocks = 0
+    for block in tqdm(original_positions_covered):
+        guard = Guard(initial_guard_position)
+        positions_covered: set[tuple[int, int]] = set()
+        # You should of course check whether the guard steps onto a tile he already covered in that direction,
+        # but cba, this works
+        max_step = 1e5
+        step = 0
+        while guard_is_within_bounds(guard, len(lines), len(line)) and step < max_step:
+            positions_covered.add(guard.position)
+            while guard.next_position() in obstacles or guard.next_position() == block:
+                guard.turn()
+            guard.move()
+            step += 1
+        if step == max_step:
+            good_blocks += 1
+
+    return good_blocks
