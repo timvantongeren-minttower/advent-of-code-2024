@@ -2,6 +2,8 @@ import io
 import itertools
 from typing import Callable
 
+from tqdm import tqdm
+
 
 def parse_line(line: str) -> tuple[int, list[int]]:
     test_part, input_part = line.split(":")
@@ -50,5 +52,24 @@ def get_answer_to_part_1(input_stream: io.StringIO) -> int:
     return test_value_sum
 
 
+concatenation = lambda nums: int(f"{nums[0]}{nums[1]}")
+
+assert concatenation((1, 2)) == 12
+
+
 def get_answer_to_part_2(input_stream: io.StringIO) -> int:
-    pass
+    lines = input_stream.readlines()
+    valid_operations = [multiplication, addition, concatenation]
+    test_value_sum = 0
+    for line in tqdm(lines):
+        test_value, inputs = parse_line(line)
+        n = len(inputs)
+        possible_orders_of_operation = itertools.product(valid_operations, repeat=n)
+        for ordered_operations in possible_orders_of_operation:
+            ordered_operations = list(ordered_operations)
+            value = apply_ordered_operations(inputs, ordered_operations)
+            if value == test_value:
+                test_value_sum += test_value
+                break
+
+    return test_value_sum
