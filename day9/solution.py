@@ -66,12 +66,10 @@ def get_answer_to_part_2(input_stream: io.StringIO) -> int:
             current_index += block_length
             currently_reading_file_block = True
 
-    print(filemap)
-
-    start_index = 0
     N = len(filemap)
     end_index = N - 1
     while end_index >= 0:
+        start_index = 0
         block_to_move = filemap[end_index]
         if block_to_move.file_id is None:
             end_index -= 1
@@ -87,6 +85,7 @@ def get_answer_to_part_2(input_stream: io.StringIO) -> int:
             if block_to_move.size == start_block.size:
                 # swap
                 filemap[start_index] = block_to_move
+                filemap[end_index] = start_block
             else:  # smaller
                 filemap = (
                     filemap[:start_index]
@@ -94,9 +93,19 @@ def get_answer_to_part_2(input_stream: io.StringIO) -> int:
                     + filemap[start_index + 1 :]
                 )
                 end_index += 1
-            filemap[end_index] = start_block
+                filemap[end_index] = Block(block_to_move.size)
             break
         end_index -= 1
+
     print(filemap)
 
-    # return sum([i * n for i, n in enumerate(filemap) if n != EMPTY])
+    current_index = 0
+    check_sum = 0
+    for block in filemap:
+        if block.file_id is None:
+            current_index += block.size
+            continue
+        for i in range(block.size):
+            check_sum += (current_index + i) * block.file_id
+        current_index += block.size
+    return check_sum
