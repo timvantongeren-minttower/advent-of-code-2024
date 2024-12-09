@@ -1,4 +1,6 @@
+from dataclasses import dataclass
 import io
+from typing import Optional
 
 EMPTY = -1
 
@@ -41,5 +43,60 @@ def get_answer_to_part_1(input_stream: io.StringIO) -> int:
     return sum([i * n for i, n in enumerate(filemap) if n != EMPTY])
 
 
+@dataclass
+class Block:
+    size: int
+    file_id: Optional[int] = None
+
+
 def get_answer_to_part_2(input_stream: io.StringIO) -> int:
-    pass
+    current_file_id = 0
+    filemap: list[Block] = []
+    current_index = 0
+    currently_reading_file_block = True
+    for char in input_stream.read():
+        block_length = int(char)
+        if currently_reading_file_block:
+            filemap.append(Block(block_length, current_file_id))
+            current_file_id += 1
+            current_index += block_length
+            currently_reading_file_block = False
+        else:
+            filemap.append(Block(block_length))
+            current_index += block_length
+            currently_reading_file_block = True
+
+    print(filemap)
+
+    start_index = 0
+    N = len(filemap)
+    end_index = N - 1
+    while end_index >= 0:
+        block_to_move = filemap[end_index]
+        if block_to_move.file_id is None:
+            end_index -= 1
+            continue
+        while start_index < end_index:
+            start_block = filemap[start_index]
+            if start_block.file_id is not None or start_block.size < block_to_move.size:
+                start_index += 1
+                continue
+
+            # move
+            # We need to split blocks..
+            if block_to_move.size == start_block.size:
+                # swap
+                filemap[start_index] = block_to_move
+            else:  # smaller
+                filemap = (
+                    filemap[:start_index]
+                    + [block_to_move, Block(start_block.size - block_to_move.size, None)]
+                    + filemap[start_index + 1 :]
+                )
+                end_index += 1
+            filemap[end_index] = start_block
+            break
+        end_index -= 1
+    print(filemap)
+
+    # return sum([i * n for i, n in enumerate(filemap) if n != EMPTY])
