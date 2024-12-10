@@ -6,10 +6,13 @@ directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 
 @dataclass
 class PeakCounter:
-    counter: int = 0
+    peaks: set[tuple[int, int]]
 
-    def add(self):
-        self.counter += 1
+    def add(self, peak: tuple[int, int]):
+        self.peaks.add(peak)
+
+    def number_of_peaks(self) -> int:
+        return len(self.peaks)
 
 
 def explore(
@@ -25,7 +28,7 @@ def explore(
         if not (next_height - current_height) == 1:
             continue
         elif next_height == 9:
-            peak_counter.add()
+            peak_counter.add(next_location)
             continue
         else:
             explore(next_location, the_map, peak_counter)
@@ -38,10 +41,9 @@ def get_answer_to_part_1(input_stream: io.StringIO) -> int:
     trailheads = [(i, j) for i in range(n) for j in range(m) if the_map[i][j] == 0]
     total = 0
     for trailhead in trailheads:
-        peak_counter = PeakCounter()
+        peak_counter = PeakCounter(set())
         explore(trailhead, the_map, peak_counter)
-        total += peak_counter.counter
-        print(trailhead, peak_counter.counter)
+        total += peak_counter.number_of_peaks()
     return total
 
 
