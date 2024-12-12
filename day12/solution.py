@@ -1,6 +1,7 @@
 from collections import defaultdict
 from dataclasses import dataclass
 import io
+from itertools import groupby
 
 
 @dataclass
@@ -103,4 +104,72 @@ def get_answer_to_part_1(input_stream: io.StringIO) -> int:
 
 
 def get_answer_to_part_2(input_stream: io.StringIO) -> int:
-    pass
+    lines = input_stream.readlines()
+    lines = [line.replace("\n", "") for line in lines]
+
+    n, m = len(lines), len(lines[0])
+    garden_counter = GardenCounter()
+    mapped_gardens: dict[int, dict[int, Garden]] = defaultdict(dict)
+    for x in range(n):
+        for y in range(m):
+            if not y in mapped_gardens[x]:
+                # new garden
+                garden_counter.counter += 1
+                map_garden(mapped_gardens, x, y, lines, garden_counter)
+
+    total_price = 0
+    for garden_id in range(garden_counter.counter + 1):
+        area = 0
+        fences: list[tuple[int, int, str]] = []
+        for x in range(n):
+            for y in range(m):
+                garden = mapped_gardens[x][y]
+                if not garden.id == garden_id:
+                    continue
+                area += 1
+                for direction in directions:
+                    if not 0 <= (x + direction.x) < n:
+                        # fence
+                        fences.append((x, y, direction.name))
+                    elif not 0 <= (y + direction.y) < m:
+                        # fence
+                        fences.append((x, y, direction.name))
+                    elif not mapped_gardens[x + direction.x][y + direction.y].id == garden_id:
+                        # fence
+                        fences.append((x, y, direction.name))
+
+        sides = 0
+        for direction, fence_iter in groupby(sorted(fences, key=lambda x: x[2]), lambda x: x[2]):
+            these_fences = list(fence_iter)
+            if direction in ["south", "north"]:
+                for x, fences_in_row_iter in groupby(
+                    sorted(these_fences, key=lambda x: x[0]), lambda x: x[0]
+                ):
+                    sorted_by_column = sorted(fences_in_row_iter, key=lambda x: x[1])
+                    prev_y = -10  # just far away so doesn't trigger
+                    for _, y, _ in sorted_by_column:
+                        if y - prev_y == 1:
+                            # same side
+                            pass
+                        else:
+                            # new side
+                            sides += 1
+                        prev_y = y
+            else:
+                for y, fences_in_row_iter in groupby(
+                    sorted(these_fences, key=lambda x: x[1]), lambda x: x[1]
+                ):
+                    sorted_by_column = sorted(fences_in_row_iter, key=lambda x: x[0])
+                    prev_x = -10  # just far away so doesn't trigger
+                    for x, _, _ in sorted_by_column:
+                        if x - prev_x == 1:
+                            # same side
+                            pass
+                        else:
+                            # new side
+                            sides += 1
+                        prev_x = x
+        # print(area, sides, garden_id)
+        total_price += area * sides
+
+    return total_price
