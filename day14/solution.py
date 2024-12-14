@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import io
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+from itertools import product
 
 
 @dataclass(eq=True, frozen=True)
@@ -79,17 +80,68 @@ def bottom_of_tree_visible(grid, max_y) -> bool:
     return all(grid[index_of_bottom])
 
 
+def get_connected_coordinates(coords: Coordinates) -> set[Coordinates]:
+    return set(
+        [
+            Coordinates(coords.x + x_offset, coords.y + y_offset)
+            for x_offset, y_offset in product([-1, 0, 1], repeat=2)
+            if not (x_offset == 0 and y_offset == 0)
+        ]
+    )
+
+
+def might_be_tree(positions: set[Coordinates]) -> bool:
+    might_be_tree = False
+    for position in positions:
+        connected = get_connected_coordinates(position)
+        if connected.intersection(positions):
+            # might be tree
+            might_be_tree = True
+        else:
+            might_be_tree = False
+            break
+    return might_be_tree
+
+
+def tree_score(positions: set[Coordinates]) -> float:
+    return sum(
+        [
+            len(get_connected_coordinates(position).intersection(positions)) > 0
+            for position in positions
+        ]
+    ) / len(positions)
+    # for position in positions:
+    #     connected = get_connected_coordinates(position)
+    #     if connected.intersection(positions):
+    #         # might be tree, as node is connected
+    #         score += 1
+    # return score / len(positions)
+
+
+assert might_be_tree(set([Coordinates(0, 0), Coordinates(0, 1)]))
+assert might_be_tree(set([Coordinates(0, 0), Coordinates(1, 1)]))
+assert not might_be_tree(set([Coordinates(0, 0), Coordinates(0, 2)]))
+assert might_be_tree(set([Coordinates(0, 0), Coordinates(0, 0), Coordinates(0, 1)]))
+
+
 def get_answer_to_part_2(input_stream: io.StringIO) -> int:
     lines = input_stream.readlines()
     robots = parse_input(lines)
     max_x, max_y = 101, 103
     # max_x, max_y = 11, 7
     for t in tqdm(range(100000000)):
-        grid = [[0] * max_x for _ in range(max_y)]
         for robot in robots:
             robot.move(max_x, max_y)
-            grid[robot.position.y][robot.position.x] = 1
-        if not t % 1000 == 0:
+        positions = set(r.position for r in robots)
+        score = tree_score(positions)
+        if score < 0.70:
             continue
+        # elif not might_be_tree(positions):
+        # continue
+
+        grid = [[0] * max_x for _ in range(max_y)]
+        for robot in robots:
+            grid[robot.position.y][robot.position.x] = 1
         plt.imshow(grid)
+        plt.title(f"Step {t}")
         plt.show()
