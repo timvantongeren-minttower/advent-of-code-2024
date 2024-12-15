@@ -254,8 +254,11 @@ def get_answer_to_part_2(input_stream: io.StringIO) -> int:
     n_x = len(expanded_warehouse_lines)
     n_y = len(expanded_warehouse_lines[0])
 
-    # visualize(shark, boxes, walls, n_x, n_y)
-    for move in moves:
+    visualize_every_n = 500
+    if visualize_every_n:
+        plt.title(f"Step {0}/{len(moves)}")
+        visualize(shark, boxes, walls, n_x, n_y)
+    for i, move in enumerate(moves):
         boxes_in_front: set[Box] = set()
         iteratively_find_connected_boxes(shark, move, boxes, boxes_in_front, n_x, n_y)
         ahead = Location(shark.x + move.x, shark.y + move.y)
@@ -273,7 +276,9 @@ def get_answer_to_part_2(input_stream: io.StringIO) -> int:
                 # air ahead
                 shark = ahead
 
-        # visualize(shark, boxes, walls, n_x, n_y)
+        if visualize_every_n and i % visualize_every_n == 0:
+            plt.title(f"Step {i+1}/{len(moves)}")
+            visualize(shark, boxes, walls, n_x, n_y)
 
     gps_sum = 0
     for box in boxes:
