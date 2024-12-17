@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 import io
 
+from tqdm import tqdm
+
 
 @dataclass
 class Computer:
@@ -125,8 +127,34 @@ def get_answer_to_part_1(input_stream: io.StringIO) -> int:
     lines = input_stream.readlines()
     computer = initialize_computer(lines)
     output = computer.run()
-    return ",".join([str(i) for i in output])
+    return ",".join([str(i) for i in output])  # type: ignore
+
+
+def output_can_be_program(output: list[int], program: list[int]):
+    if len(output) > len(program):
+        return False
+    for i in range(len(output)):
+        if output[i] != program[i]:
+            return False
+    return True
+
+
+def output_is_program(output: list[int], program: list[int]):
+    if not len(output) == len(program):
+        return False
+    return all([o == p for o, p in zip(output, program)])
 
 
 def get_answer_to_part_2(input_stream: io.StringIO) -> int:
-    pass
+    lines = input_stream.readlines()
+
+    for initial_a in tqdm([32**15 - 1, 32**16 - 1]):
+        computer = initialize_computer(lines)
+        computer.a = initial_a
+        while computer.instruction_pointer < len(computer.program) and output_can_be_program(
+            computer.output, computer.program
+        ):
+            computer.run_next_operation()
+        if output_is_program(computer.output, computer.program):
+            return initial_a
+    raise ValueError(f"Did not find solution after")
